@@ -34,11 +34,12 @@ const EXAMPLE_SEARCH_RESULTS = {results:[{
 //You can test this function by passing it one of the above array items
 //(e.g., `EXAMPLE_SEARCH_RESULTS.results[0]).
 function renderTrack(song) {
-  let track = $("#records").createElement('img');
-  track.attr("src", song.artworkUrl100);
-  track.attr("alt", song.trackName)
-  track.attr("title", song.trackName);
-  song.append(track);
+  let records = $("#records");
+  let cover = $("<img>");
+  cover.attr("src", song.artworkUrl100);
+  cover.attr("alt", song.trackName);
+  cover.attr("title", song.trackName);
+  records.append(cover);
 }
 
 //Define a function `renderSearchResults()` that takes in an object with a
@@ -50,10 +51,10 @@ function renderTrack(song) {
 //
 //You can test this function by passing it the `EXAMPLE_SEARCH_RESULTS` object.
 function renderSearchResults(input) {
-  $("#records").content('');
+  $("#records").html('');
   let track = input.results;
   if (track.length < 1) {
-    renderError(new Error("No results shown"));
+    renderError(new Error("No results found"));
   }
   for (let i = 0; i < track.length; i++) {
     renderTrack(track[i]);
@@ -104,7 +105,7 @@ function fetchTrackList(search) {
 //the the form is submitted) your `fetchTrackList()` function is called with the
 //user-entered `#searchQuery` value. Use the `preventDefault()` function to keep
 //the form from being submitted as usual (and navigating to a different page).
-$('form').addEventListener('submit', function() {
+$('form').click('submit', function(event) {
   event.preventDefault();
   fetchTrackList($('#searchQuery').val());
 })
@@ -114,9 +115,11 @@ $('form').addEventListener('submit', function() {
 //on the page. Display this by creating a `<p class="alert alert-danger">` and
 //placing that alert inside the `#records` element.
 function renderError(error) {
-  $('p').text(error.message);
-  $('p').addClass("alert alert-danger");
-  $('#records').append($('p'));
+  let alert = $("<p></p>");
+  alert.text(error.message);
+  alert.addClass("alert");
+  alert.addClass("alert-danger");
+  $('#records').append(alert);
 }
 
 //Add the error handing to your program in two ways:
@@ -141,10 +144,8 @@ function renderError(error) {
 //after the ENTIRE request is completed (including after any error catching---
 //download the data and `catch()` the error, and `then()` show the spinner.
 function toggleSpinner() {
-  $('.fa-spinner').addClass('d-none');
+  $('.fa-spinner').toggleClass('d-none');
 }
-
-
 
 //Optional extra: add the ability to "play" each track listing by clicking
 //on it. Modify the `renderTrack()` function to assign a `'click'` listener to
