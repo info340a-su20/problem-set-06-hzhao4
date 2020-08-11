@@ -21,31 +21,44 @@ const EXAMPLE_SEARCH_RESULTS = {results:[{
 
 
 //For practice, define a function `renderTrack()` that takes as an argument an
-//Object representing a SINGLE song track (like an element of the above array) 
-//and adds a new DOM element to the `#records` div representing that track. The 
-//new DOM element should be an `<img>` with a `src` that is the track's 
-//`artworkUrl100` property (the album cover), and both `alt` text and a `title` 
+//Object representing a SINGLE song track (like an element of the above array)
+//and adds a new DOM element to the `#records` div representing that track. The
+//new DOM element should be an `<img>` with a `src` that is the track's
+//`artworkUrl100` property (the album cover), and both `alt` text and a `title`
 //attributes that include the name of the track.
 //
-//You may use either the DOM API or jQuery (you will need to load jQuery). 
-//Note that the included CSS provides some default styling to `<img>` elements 
+//You may use either the DOM API or jQuery (you will need to load jQuery).
+//Note that the included CSS provides some default styling to `<img>` elements
 //(to make them look like records!)
 //
 //You can test this function by passing it one of the above array items
 //(e.g., `EXAMPLE_SEARCH_RESULTS.results[0]).
-
-
+function renderTrack(song) {
+  let track = $("#records").createElement('img');
+  track.attr("src", song.artworkUrl100);
+  track.attr("alt", song.trackName)
+  track.attr("title", song.trackName);
+  song.append(track);
+}
 
 //Define a function `renderSearchResults()` that takes in an object with a
 //`results` property containing an array of music tracks; the same format as
 //the above `EXAMPLE_SEARCH_RESULTS` variable.
-//The function should render each item in the argument's `results` array into 
-//the DOM by calling the `renderTrack()` function you just defined. Be sure to 
+//The function should render each item in the argument's `results` array into
+//the DOM by calling the `renderTrack()` function you just defined. Be sure to
 //"clear" the previously displayed results first!
 //
 //You can test this function by passing it the `EXAMPLE_SEARCH_RESULTS` object.
-
-
+function renderSearchResults(input) {
+  $("#records").content('');
+  let track = input.results;
+  if (track.length < 1) {
+    renderError(new Error("No results shown"));
+  }
+  for (let i = 0; i < track.length; i++) {
+    renderTrack(track[i]);
+  }
+}
 
 //Now it's the time to practice using `fetch()`! First, modify the `index.html`
 //file to load the polyfills for _BOTH_ the fetch() function and Promises, so
@@ -54,37 +67,57 @@ const EXAMPLE_SEARCH_RESULTS = {results:[{
 
 
 //Define a function `fetchTrackList()` that takes in a "search term" string as a
-//parameter and uses the `fetch()` function to downloads a list of tracks from 
+//parameter and uses the `fetch()` function to downloads a list of tracks from
 //the iTunes Search API. You can use the below `URL_TEMPLATE` string for the URL,
 //replacing `"{searchTerm}"` with the passed in search term (no {})
-//Send the AJAX request, _then_ encode the response as JSON once it is received, 
-//and _then_ should call you `renderSearchResults() function and pass it the 
+//Send the AJAX request, _then_ encode the response as JSON once it is received,
+//and _then_ should call you `renderSearchResults() function and pass it the
 //encoded data.
 //
 //IMPORTANT: Your `fetchTrackList()` method must also _return_ the Promise
 //returned by the end of the `.then()` chain! This is so the method itself will
 //be asynchronous, and can be further chained and utilized (e.g., by the tester).
 //
-//You can test this function by calling the method and passing it the name of 
+//You can test this function by calling the method and passing it the name of
 //your favorite band (you CANNOT test it with the search button yet!)
 const URL_TEMPLATE = "https://itunes.apple.com/search?entity=song&limit=25&term={searchTerm}";
+function fetchTrackList(search) {
+  toggleSpinner();
+  let url = URL_TEMPLATE.substring(0, 58) + search;
+  let promise = fetch(url)
+    .then(function(response) {
+      return response.json();
+    })
+    .then(function(data) {
+      renderSearchResults(data);
+    })
+    .catch(function(error) {
+      renderError(error);
+    })
+    .then(function() {
+      toggleSpinner();
+    })
+    return promise;
+}
 
-
-
-
-//Add an event listener to the "search" button so that when it is clicked (and 
+//Add an event listener to the "search" button so that when it is clicked (and
 //the the form is submitted) your `fetchTrackList()` function is called with the
 //user-entered `#searchQuery` value. Use the `preventDefault()` function to keep
 //the form from being submitted as usual (and navigating to a different page).
-
-
+$('form').addEventListener('submit', function() {
+  event.preventDefault();
+  fetchTrackList($('#searchQuery').val());
+})
 
 //Next, add some error handling to the page. Define a function `renderError()`
 //that takes in an "Error object" and displays that object's `message` property
 //on the page. Display this by creating a `<p class="alert alert-danger">` and
 //placing that alert inside the `#records` element.
-
-
+function renderError(error) {
+  $('p').text(error.message);
+  $('p').addClass("alert alert-danger");
+  $('#records').append($('p'));
+}
 
 //Add the error handing to your program in two ways:
 //(1) Add a `.catch()` callback to the AJAX call in `fetchTrackList()` that
@@ -97,17 +130,19 @@ const URL_TEMPLATE = "https://itunes.apple.com/search?entity=song&limit=25&term=
 
 
 //Finally, add a "loading spinner" as user feedback in case the download takes a
-//long time (so the page doesn't seem unresponsive). To do this, define a 
-//function `togglerSpinner()` that modifies the existing `.fa-spinner` element 
+//long time (so the page doesn't seem unresponsive). To do this, define a
+//function `togglerSpinner()` that modifies the existing `.fa-spinner` element
 //so that it is displayed if currently hidden, or hidden if currently displayed.
-//Use the `classList.toggle()` method (or `.toggleClass()` with jQuery) to 
+//Use the `classList.toggle()` method (or `.toggleClass()` with jQuery) to
 //toggle the presence of the `d-none` class.
 //
 //Modify the `fetchTrackList()` function once again so that you toggle the
 //spinner (show it) BEFORE you send the AJAX request, and toggle it back off
 //after the ENTIRE request is completed (including after any error catching---
 //download the data and `catch()` the error, and `then()` show the spinner.
-
+function toggleSpinner() {
+  $('.fa-spinner').addClass('d-none');
+}
 
 
 
@@ -132,9 +167,9 @@ function playTrackPreview(track, img) {
     state.previewAudio = new Audio(track.previewUrl); //create new audio
     state.previewAudio.play(); //play new
     img.classList.add('fa-spin'); //start the spinning
-  } 
+  }
   else {
-    if(state.previewAudio.paused){ 
+    if(state.previewAudio.paused){
       state.previewAudio.play();
     } else {
       state.previewAudio.pause();
@@ -147,13 +182,13 @@ function playTrackPreview(track, img) {
 if(typeof module !== 'undefined' && module.exports){
   /* eslint-disable */
   module.exports.EXAMPLE_SEARCH_RESULTS = EXAMPLE_SEARCH_RESULTS;
-  if(typeof renderTrack !== 'undefined') 
+  if(typeof renderTrack !== 'undefined')
     module.exports.renderTrack = renderTrack;
-  if(typeof renderSearchResults !== 'undefined') 
+  if(typeof renderSearchResults !== 'undefined')
     module.exports.renderSearchResults = renderSearchResults;
-  if(typeof fetchTrackList !== 'undefined') 
+  if(typeof fetchTrackList !== 'undefined')
     module.exports.fetchTrackList = fetchTrackList;
-  if(typeof toggleSpinner !== 'undefined') 
+  if(typeof toggleSpinner !== 'undefined')
     module.exports.toggleSpinner = toggleSpinner;
-  module.exports.playTrackPreview = playTrackPreview;    
+  module.exports.playTrackPreview = playTrackPreview;
 }
